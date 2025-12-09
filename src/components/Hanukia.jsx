@@ -3,13 +3,21 @@ import Candle from './Candle';
 import Shamash from './Shamash';
 import PrayerModal from './PrayerModal';
 import { getChanukahDay, getDaysUntilChanukah, CHANUKAH_DAYS } from '../utils/chanukahDate';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Sparkles } from 'lucide-react';
+import ChanukahFactsModal from './ChanukahFactsModal';
+import { fetchChanukahContent } from '../utils/gemini';
 
 const Hanukia = () => {
   const [currentDay, setCurrentDay] = useState(0);
   const [daysUntil, setDaysUntil] = useState(0);
   const [litCandles, setLitCandles] = useState(Array(8).fill(false));
   const [isPrayerModalOpen, setIsPrayerModalOpen] = useState(false);
+
+  // Gemini Facts State
+  const [isFactsModalOpen, setIsFactsModalOpen] = useState(false);
+  const [factsContent, setFactsContent] = useState({ title: '', content: '' });
+  const [isLoadingFacts, setIsLoadingFacts] = useState(false);
+
   const candleRefs = useRef([]);
   const containerRef = useRef(null);
 
@@ -98,6 +106,17 @@ const Hanukia = () => {
     // Optional: Play sound
   };
 
+  const handleOpenFacts = async () => {
+    setIsFactsModalOpen(true);
+    setIsLoadingFacts(true);
+    // Reset content/title to blank while loading if desired, or keep previous
+    setFactsContent({ title: '', content: '' });
+
+    const data = await fetchChanukahContent();
+    setFactsContent(data);
+    setIsLoadingFacts(false);
+  };
+
   // Candles are rendered Left to Right in DOM?
   // We want Right to Left positioning visually.
   // Flex-row-reverse? Or just map 7..0?
@@ -114,6 +133,13 @@ const Hanukia = () => {
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto p-4" ref={containerRef}>
 
       <PrayerModal isOpen={isPrayerModalOpen} onClose={() => setIsPrayerModalOpen(false)} />
+      <ChanukahFactsModal
+        isOpen={isFactsModalOpen}
+        onClose={() => setIsFactsModalOpen(false)}
+        title={factsContent.title}
+        content={factsContent.content}
+        isLoading={isLoadingFacts}
+      />
 
       {/* Controls / Info */}
       <div className="mb-12 text-center space-y-4">
@@ -144,6 +170,14 @@ const Hanukia = () => {
           >
             <BookOpen size={16} />
             Ver Orações
+          </button>
+
+          <button
+            onClick={handleOpenFacts}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-900/50 hover:bg-purple-900 text-purple-200 rounded border border-purple-700 transition-colors"
+          >
+            <Sparkles size={16} />
+            Curiosidades
           </button>
         </div>
       </div>
